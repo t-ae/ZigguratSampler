@@ -3,12 +3,17 @@ import XCTest
 
 final class ZigguratSamplerTests: XCTestCase {
     func testInit() {
-        let sampler = ZigguratSampler(numLayers: 256)
+        let sampler = ZigguratSampler()
+        _ = sampler.next()
+    }
+    
+    func testInit_specifyLayers() {
+        let sampler = ZigguratSampler(numLayers: 32)
         _ = sampler.next()
     }
     
     func testMoments() {
-        let sampler = ZigguratSampler(numLayers: 256)
+        let sampler = ZigguratSampler()
         
         let count = 10_000_000
         var sum: Double = 0
@@ -33,7 +38,7 @@ final class ZigguratSamplerTests: XCTestCase {
     }
     
     func testPerformance() {
-        let sampler = ZigguratSampler(numLayers: 256)
+        let sampler = ZigguratSampler()
         let count = 1_000_000
         var x = [Double](repeating: 0, count: count)
         measure {
