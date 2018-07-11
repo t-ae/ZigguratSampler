@@ -15,7 +15,7 @@ public struct ZigguratSampler {
         while true {
             if let result = ZigguratSampler.constructZiggurat(x0, numLayers: numLayers) {
                 bestResult = result
-                print("Initial: \(bestResult.score)")
+                print("Initial: \(bestResult.score), x0=\(x0)")
                 break
             }
             x0 *= 2
@@ -67,7 +67,6 @@ public struct ZigguratSampler {
     static func pdf_inv(_ y: Double) -> Double {
         return sqrt(-log(2 * .pi * y * y))
     }
-    
     
     public func next<R: RandomNumberGenerator>(using: inout R) -> Double {
         while true {

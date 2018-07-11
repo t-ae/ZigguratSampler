@@ -47,16 +47,45 @@ final class ZigguratSamplerTests: XCTestCase {
             }
         }
     }
+    
     func testPerformance_box_muller() {
         let count = 1_000_000
         var x = [Double](repeating: 0, count: count)
         measure {
             for i in 0..<count/2 {
-                let u1 = Double.random(in: .leastNonzeroMagnitude..<1)
+                var u1: Double
+                repeat {
+                    u1 = Double.random(in: 0..<1)
+                } while u1 == 0
+                
+                var u2: Double
+                repeat {
+                    u2 = Double.random(in: 0..<2 * .pi)
+                } while u2 == 0
+                
                 let r = sqrt(-2 * log(u1))
-                let u2 = Double.random(in: .leastNonzeroMagnitude..<2 * .pi)
                 x[2*i+0] = r * sin(u2)
                 x[2*i+1] = r * cos(u2)
+            }
+        }
+    }
+    
+    func testPerformance_polar() {
+        let count = 1_000_000
+        var x = [Double](repeating: 0, count: count)
+        measure {
+            for i in 0..<count/2 {
+                var u1: Double
+                var u2: Double
+                var r: Double
+                repeat {
+                    u1 = .random(in: -1..<1)
+                    u2 = .random(in: -1..<1)
+                    r = u1*u1 + u2*u2
+                } while r >= 1 || r == 0
+                let l = sqrt(-2*log(r) / r)
+                x[2*i+0] = l * u1
+                x[2*i+1] = l * u2
             }
         }
     }
