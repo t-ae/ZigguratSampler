@@ -12,26 +12,28 @@ public struct ZigguratSampler {
     }
     
     static func constructZiggurat() -> (xs: [Double], ys: [Double]) {
-        var xs = [Double](repeating: .nan, count: numLayers)
-        var ys = [Double](repeating: .nan, count: numLayers)
+        var xs = [Double](repeating: .nan, count: numLayers+1)
+        var ys = [Double](repeating: .nan, count: numLayers+1)
         
-        xs[0] = 3.6542
-        ys[0] = pdf(xs[0])
+        xs[1] = 3.6542
+        ys[1] = pdf(xs[1])
         
         // Manually adjusted, between 1-Φ(0.365) and 1-Φ(0.366)
-        let area = xs[0]*pdf(xs[0]) + 0.00012935
+        let area = xs[1]*pdf(xs[1]) + 0.000131
         
-        for i in 1..<numLayers {
+        xs[0] = area / ys[1]
+        
+        for i in 2...numLayers {
             let height = area / xs[i-1]
             ys[i] = ys[i-1] + height
             xs[i] = pdf_inv(ys[i])
         }
         
         // last becomes nan, specify manually
-        xs[numLayers-1] = 0
+        xs[numLayers] = 0
         
         // last layer must cover top of pdf
-        precondition(ys.last! >= pdf(0))
+        precondition(ys.last! >= pdf(0), "\(ys.last!) < \(pdf(0))")
 
         return (xs, ys)
     }
@@ -47,7 +49,7 @@ public struct ZigguratSampler {
     
     public func next<R: RandomNumberGenerator>(using: inout R) -> Double {
         while true {
-            let layer = Int.random(in: 0..<ZigguratSampler.numLayers-1)
+            let layer = Int.random(in: 0..<ZigguratSampler.numLayers)
             let x = Double.random(in: -xs[layer]..<xs[layer])
             
             if abs(x) < xs[layer+1] {
