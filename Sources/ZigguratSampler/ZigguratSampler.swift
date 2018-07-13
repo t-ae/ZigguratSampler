@@ -2,61 +2,38 @@ import Foundation
 
 public struct ZigguratSampler {
     
-    let numLayers: Int
+    static let numLayers: Int = 256
+    
     let xs: [Double]
     let ys: [Double]
     
-    public init(numLayers: Int = 256) {
-        self.numLayers = numLayers
-        
-        // search
-        var bestResult: (xs: [Double], ys: [Double], score: Double)!
-        var x0: Double = 1
-        while true {
-            if let result = ZigguratSampler.constructZiggurat(x0, numLayers: numLayers) {
-                bestResult = result
-                print("Initial: \(bestResult.score), x0=\(x0)")
-                break
-            }
-            x0 *= 2
-        }
-        
-        var delta = x0 / 2
-        for _ in 0..<32 {
-            if let result = ZigguratSampler.constructZiggurat(x0 - delta, numLayers: numLayers) {
-                x0 -= delta
-                bestResult = result
-                print("Update: \(bestResult.score) x0=\(x0)")
-            }
-            delta /= 2
-        }
-        self.xs = bestResult.xs
-        self.ys = bestResult.ys
+    public init() {
+        (self.xs, self.ys) = ZigguratSampler.constructZiggurat()
     }
     
-    static func constructZiggurat(_ x0: Double, numLayers: Int) -> (xs: [Double], ys: [Double], score: Double)? {
-        var xs = [Double](repeating: .nan, count: numLayers + 1)
+    static func constructZiggurat() -> (xs: [Double], ys: [Double]) {
+        var xs = [Double](repeating: .nan, count: numLayers)
         var ys = [Double](repeating: .nan, count: numLayers)
         
-        let y0 = pdf(x0)
-        let f0 = pdf(0)
+        xs[0] = 3.6542
+        ys[0] = pdf(xs[0])
         
-        let area = x0 * y0
-        
-        // each (xs[i-1], ys[i]) defines the right-top of layer
-        xs[0] = x0
-        ys[0] = y0
+        // Manually adjusted, between 1-Φ(0.365) and 1-Φ(0.366)
+        let area = xs[0]*pdf(xs[0]) + 0.00012935
         
         for i in 1..<numLayers {
             let height = area / xs[i-1]
             ys[i] = ys[i-1] + height
-            guard ys[i] <= f0 else {
-                return nil
-            }
             xs[i] = pdf_inv(ys[i])
         }
         
-        return (xs, ys, ys.last! / f0)
+        // last becomes nan, specify manually
+        xs[numLayers-1] = 0
+        
+        // last layer must cover top of pdf
+        precondition(ys.last! >= pdf(0))
+
+        return (xs, ys)
     }
     
     static func pdf(_ x: Double) -> Double {
@@ -70,10 +47,10 @@ public struct ZigguratSampler {
     
     public func next<R: RandomNumberGenerator>(using: inout R) -> Double {
         while true {
-            let layer = Int.random(in: 0..<numLayers)
+            let layer = Int.random(in: 0..<ZigguratSampler.numLayers-1)
             let x = Double.random(in: -xs[layer]..<xs[layer])
             
-            if abs(x) < xs[layer] {
+            if abs(x) < xs[layer+1] {
                 return x
             } else if layer == 0 {
                 // sample from tail
@@ -83,7 +60,7 @@ public struct ZigguratSampler {
                     return [x + xs[0], -x - xs[0]].randomElement()!
                 }
             } else {
-                let y = Double.random(in: ys[layer-1]..<ys[layer])
+                let y = Double.random(in: ys[layer]..<ys[layer+1])
                 if ZigguratSampler.pdf(x) > y {
                     return x
                 }

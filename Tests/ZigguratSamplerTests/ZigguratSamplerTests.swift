@@ -7,11 +7,6 @@ final class ZigguratSamplerTests: XCTestCase {
         _ = sampler.next()
     }
     
-    func testInit_specifyLayers() {
-        let sampler = ZigguratSampler(numLayers: 32)
-        _ = sampler.next()
-    }
-    
     func testMoments() {
         let sampler = ZigguratSampler()
         
