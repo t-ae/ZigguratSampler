@@ -19,8 +19,9 @@ public struct ZigguratSampler {
         ys[1] = pdf(xs[1])
         
         // Manually adjusted, between 1-Φ(0.365) and 1-Φ(0.366)
-        let area = xs[1]*pdf(xs[1]) + 0.000131
+        let area = xs[1]*pdf(xs[1]) + 0.0001293102
         
+        // out point
         xs[0] = area / ys[1]
         
         for i in 2...numLayers {
